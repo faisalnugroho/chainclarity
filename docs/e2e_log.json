@@ -304,6 +304,11 @@
         "next_id": "11"
       },
       "ts": 1792486699.4408073
+    },
+    {
+      "step": "audit_note_claim10",
+      "note": "claim 10 adjudicate tx hash not captured (studio RPC 'Response ended prematurely' during receipt wait). Evidence for INSUFFICIENT_EVIDENCE verdict: submit tx 0x70a83f80f09bfb0143ae9f6987628b6e68ffde190325ecd3024912b74decdc16 (captured, MAJORITY_AGREE/exec SUCCESS) + independent get_claim(10) read returning status=ADJUDICATED verdict=INSUFFICIENT_EVIDENCE. The adjudicate tx hash itself remains unrecovered from RPC/explorer; disclosed rather than fabricated.",
+      "ts": 1792488434.3257186
     }
   ]
 }
