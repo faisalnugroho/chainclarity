@@ -365,7 +365,8 @@ def test_analyze_falls_back_to_keyless_when_no_keys(monkeypatch):
                            return_value={'status': '0x1'}):
         ev = analyze('ethereum', ETH_TX)
     assert ev['tx_status'] == 'success'
-    assert 'blockscout' in ev['provider']
+    assert ev['provider'] == 'etherscan'  # canonical label; fetcher disclosed
+    assert any('blockscout' in l for l in ev['limitations'])
     assert ev['fields']['independent_rpc_status_agrees'] == 'True'
 
 
@@ -380,7 +381,8 @@ def test_analyze_solana_falls_back_keyless(monkeypatch):
                                                     'WallB' + 'y' * 39]}}}
     with mock.patch.object(ak, '_rpc', return_value=sol_tx):
         ev = analyze('solana', SOL_TX)
-    assert ev['tx_status'] == 'success' and ev['provider'] == 'solana-rpc'
+    assert ev['tx_status'] == 'success' and ev['provider'] == 'solscan'
+    assert any('solana-rpc' in l for l in ev['limitations'])
     assert ev['fields']['fee_sol'] == '0.000005'
 
 

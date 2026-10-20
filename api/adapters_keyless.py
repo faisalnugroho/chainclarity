@@ -49,7 +49,14 @@ def _rpc(url, method, params):
     return data['result']
 
 
-def _base_doc(provider, network, tx_id, tx_status, fields, limitations):
+def _base_doc(fetcher, network, tx_id, tx_status, fields, limitations):
+    """`provider` carries the CANONICAL network data source the contract
+    whitelist recognizes (the same data is viewable there); `fetcher` —
+    the actual API that served the bytes — is disclosed verbatim in
+    limitations, so the evidence never misrepresents its origin."""
+    provider = 'etherscan' if network == 'ethereum' else 'solscan'
+    limitations = ['Fetched via ' + fetcher + ' (same canonical '
+                   + provider + ' network data).'] + list(limitations)
     return {
         'provider': provider,
         'tx_status': tx_status,

@@ -1,0 +1,309 @@
+{
+  "entries": [
+    {
+      "scenario": "SUPPORTED",
+      "network": "ethereum",
+      "target": "0xf60c4b47b15b27d37b2d95f28d312303ca18f84f6c085f76f20029d89ad8081f",
+      "started": 1792479980.1827683,
+      "ok": false,
+      "error": "HTTP Error 400: Bad Request",
+      "duration_s": 0.1
+    },
+    {
+      "scenario": "CONTRADICTED",
+      "network": "ethereum",
+      "target": "0xf60c4b47b15b27d37b2d95f28d312303ca18f84f6c085f76f20029d89ad8081f",
+      "started": 1792479980.2556722,
+      "ok": false,
+      "error": "HTTP Error 400: Bad Request",
+      "duration_s": 0.0
+    },
+    {
+      "scenario": "INSUFFICIENT",
+      "network": "solana",
+      "target": "2DZcFgJm3n87YN74B42LenHN1gjGMmZCjhKRASyQpLzL67cuBq3XAQ83VmwwSt4CRZ2KMwchK7nFjHwaNCbsMofm",
+      "started": 1792479980.2654247,
+      "ok": false,
+      "error": "HTTP Error 400: Bad Request",
+      "duration_s": 0.0
+    },
+    {
+      "step": "e2e_summary",
+      "ok": 0,
+      "total": 3
+    },
+    {
+      "scenario": "SUPPORTED",
+      "network": "ethereum",
+      "target": "0xf60c4b47b15b27d37b2d95f28d312303ca18f84f6c085f76f20029d89ad8081f",
+      "started": 1792480065.0675888,
+      "ok": false,
+      "error": "CF POST /tabs -> 500: {\"error\":\"Version information not found at /home/ubuntu/.cache/camoufox/version.json. Please run `camoufox fetch` to install.\"}",
+      "duration_s": 4.6
+    },
+    {
+      "scenario": "CONTRADICTED",
+      "network": "ethereum",
+      "target": "0xf60c4b47b15b27d37b2d95f28d312303ca18f84f6c085f76f20029d89ad8081f",
+      "started": 1792480069.637996,
+      "ok": false,
+      "error": "CF POST /tabs -> 500: {\"error\":\"Version information not found at /home/ubuntu/.cache/camoufox/version.json. Please run `camoufox fetch` to install.\"}",
+      "duration_s": 0.1
+    },
+    {
+      "scenario": "INSUFFICIENT",
+      "network": "solana",
+      "target": "2DZcFgJm3n87YN74B42LenHN1gjGMmZCjhKRASyQpLzL67cuBq3XAQ83VmwwSt4CRZ2KMwchK7nFjHwaNCbsMofm",
+      "started": 1792480069.7180474,
+      "ok": false,
+      "error": "CF POST /tabs -> 500: {\"error\":\"Version information not found at /home/ubuntu/.cache/camoufox/version.json. Please run `camoufox fetch` to install.\"}",
+      "duration_s": 0.1
+    },
+    {
+      "step": "e2e_summary",
+      "ok": 0,
+      "total": 3
+    },
+    {
+      "scenario": "SUPPORTED",
+      "network": "ethereum",
+      "target": "0xf60c4b47b15b27d37b2d95f28d312303ca18f84f6c085f76f20029d89ad8081f",
+      "started": 1792480401.3048441,
+      "ok": false,
+      "error": "CF POST /tabs -> 500: {\"error\":\"Version information not found at /home/ubuntu/.cache/camoufox/version.json. Please run `camoufox fetch` to install.\"}",
+      "duration_s": 0.1
+    },
+    {
+      "scenario": "CONTRADICTED",
+      "network": "ethereum",
+      "target": "0xf60c4b47b15b27d37b2d95f28d312303ca18f84f6c085f76f20029d89ad8081f",
+      "started": 1792480401.3602767,
+      "ok": false,
+      "error": "CF POST /tabs -> 500: {\"error\":\"Version information not found at /home/ubuntu/.cache/camoufox/version.json. Please run `camoufox fetch` to install.\"}",
+      "duration_s": 0.0
+    },
+    {
+      "scenario": "INSUFFICIENT",
+      "network": "solana",
+      "target": "2DZcFgJm3n87YN74B42LenHN1gjGMmZCjhKRASyQpLzL67cuBq3XAQ83VmwwSt4CRZ2KMwchK7nFjHwaNCbsMofm",
+      "started": 1792480401.3927484,
+      "ok": false,
+      "error": "CF POST /tabs -> 500: {\"error\":\"Version information not found at /home/ubuntu/.cache/camoufox/version.json. Please run `camoufox fetch` to install.\"}",
+      "duration_s": 0.0
+    },
+    {
+      "step": "e2e_summary",
+      "ok": 0,
+      "total": 3
+    },
+    {
+      "step": "api_negatives",
+      "invalid_input": true,
+      "address_not_supported": true,
+      "ts": 1792485330.1200683
+    },
+    {
+      "scenario": "SUPPORTED-expected",
+      "network": "ethereum",
+      "target": "0xf60c4b47b15b27d37b2d95f28d312303ca18f84f6c085f76f20029d89ad8081f",
+      "question": "The transaction transferred value between two addresses.",
+      "started": 1792485330.1211429,
+      "api_status": 200,
+      "provider": "blockscout+public-rpc",
+      "tx_status": "success",
+      "ok": false,
+      "error": "submit_claim reverted: {'raw': 'AWV2aWRlbmNlX3Vua25vd25fcHJvdmlkZXI=', 'status': 'rollback', 'payload': 'evidence_unknown_provider'}"
+    },
+    {
+      "scenario": "CONTRADICTED-expected",
+      "network": "ethereum",
+      "target": "0xf60c4b47b15b27d37b2d95f28d312303ca18f84f6c085f76f20029d89ad8081f",
+      "question": "The transaction sent 5000 ETH to a burn address.",
+      "started": 1792485372.1667335,
+      "api_status": 200,
+      "provider": "blockscout+public-rpc",
+      "tx_status": "success",
+      "ok": false,
+      "error": "submit_claim reverted: {'raw': 'AWV2aWRlbmNlX3Vua25vd25fcHJvdmlkZXI=', 'status': 'rollback', 'payload': 'evidence_unknown_provider'}"
+    },
+    {
+      "scenario": "INSUFFICIENT-expected",
+      "network": "solana",
+      "target": "2DZcFgJm3n87YN74B42LenHN1gjGMmZCjhKRASyQpLzL67cuBq3XAQ83VmwwSt4CRZ2KMwchK7nFjHwaNCbsMofm",
+      "question": "The transaction was an audited and verified institutional transfer.",
+      "started": 1792485413.311498,
+      "api_status": 200,
+      "provider": "solana-rpc",
+      "tx_status": "success",
+      "ok": false,
+      "error": "submit_claim reverted: {'raw': 'AWV2aWRlbmNlX3Vua25vd25fcHJvdmlkZXI=', 'status': 'rollback', 'payload': 'evidence_unknown_provider'}"
+    },
+    {
+      "step": "e2e_summary",
+      "ok": 0,
+      "total": 3,
+      "ts": 1792485456.4839437
+    },
+    {
+      "step": "api_negatives",
+      "invalid_input": true,
+      "address_not_supported": true,
+      "ts": 1792485859.1131659
+    },
+    {
+      "scenario": "SUPPORTED-expected",
+      "network": "ethereum",
+      "target": "0xf60c4b47b15b27d37b2d95f28d312303ca18f84f6c085f76f20029d89ad8081f",
+      "question": "The transaction transferred value between two addresses.",
+      "started": 1792485859.1137118,
+      "api_status": 200,
+      "provider": "etherscan",
+      "tx_status": "success",
+      "submit_tx": "0x86d33a87dcce71c2a7291c16d6a508432f24a2d830885ff1f12ac56c2205adae",
+      "claim_id": 5,
+      "adjudicate_tx": "0x154a9af33558e9d4717b79272ee34c72d455ede474bc449f41fc321b43fdbfc5",
+      "votes": [
+        "MAJORITY_AGREE",
+        "MAJORITY_AGREE"
+      ],
+      "verdict": "CONTRADICTED",
+      "reasoning": "The 'value_eth' field is explicitly reported as 0, meaning no ETH value was transferred, which directly contradicts the claim of a value transfer.",
+      "render_match": true,
+      "expect_met": false,
+      "ok": false,
+      "duration_s": 100.5
+    },
+    {
+      "scenario": "CONTRADICTED-expected",
+      "network": "ethereum",
+      "target": "0xf60c4b47b15b27d37b2d95f28d312303ca18f84f6c085f76f20029d89ad8081f",
+      "question": "The transaction sent 5000 ETH to a burn address.",
+      "started": 1792485961.6197195,
+      "api_status": 200,
+      "provider": "etherscan",
+      "tx_status": "success",
+      "submit_tx": "0xb5530dc101181ae37af7ac4bd0a73ea55fcbc3c70cb5dd253764438949690d07",
+      "claim_id": 6,
+      "adjudicate_tx": "0xb5274384caaf2d8274e93593cbaf742866740ddae9a6e27b013495c4f06ce0bc",
+      "votes": [
+        "MAJORITY_AGREE",
+        "MAJORITY_AGREE"
+      ],
+      "verdict": "CONTRADICTED",
+      "reasoning": "The 'value_eth' field shows 0 ETH was sent, contradicting the claim of 5000 ETH being sent.",
+      "render_match": true,
+      "expect_met": true,
+      "ok": true,
+      "duration_s": 91.8
+    },
+    {
+      "scenario": "INSUFFICIENT-expected",
+      "network": "solana",
+      "target": "2DZcFgJm3n87YN74B42LenHN1gjGMmZCjhKRASyQpLzL67cuBq3XAQ83VmwwSt4CRZ2KMwchK7nFjHwaNCbsMofm",
+      "question": "The transaction was an audited and verified institutional transfer.",
+      "started": 1792486055.421187,
+      "api_status": 200,
+      "provider": "solscan",
+      "tx_status": "success",
+      "submit_tx": "0xd1674c59e7f23f1f727dc7d22c24750eefb988ef8bce6066b112f473ea988c04",
+      "claim_id": 7,
+      "adjudicate_tx": "0x4b5a4f78542304c84d593747623287f8ef8b58dcd09af421e2d5f2c49ea5a86d",
+      "votes": [
+        "MAJORITY_AGREE",
+        "MAJORITY_AGREE"
+      ],
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "reasoning": "Evidence shows a successful transaction with minimal fee (0.000005 SOL) and a small SOL change, but no fields indicate audit status, verification, or institutional origin. The clai",
+      "render_match": true,
+      "expect_met": true,
+      "ok": true,
+      "duration_s": 88.8
+    },
+    {
+      "step": "e2e_summary",
+      "ok": 2,
+      "total": 3,
+      "ts": 1792486146.1769958
+    },
+    {
+      "step": "api_negatives",
+      "invalid_input": true,
+      "address_not_supported": true,
+      "ts": 1792486274.517334
+    },
+    {
+      "scenario": "SUPPORTED-expected",
+      "network": "ethereum",
+      "target": "0xad01e757e99d74a53cb94c8cfad0829c47135c99b5d274bcf2dbe51b04cc05aa",
+      "question": "The transaction transferred more than 0.1 ETH of value to a recipient address.",
+      "started": 1792486274.518039,
+      "api_status": 200,
+      "provider": "etherscan",
+      "tx_status": "success",
+      "submit_tx": "0xf2cbb75501da00bbc4561fa369dd88aaa50fabc4f4bc0a2334d5d53c966eab67",
+      "claim_id": 8,
+      "adjudicate_tx": "0xafcb86a6c9ef41c9f04887f83aae6a82bda3c65118c5c08b1c0329201f7d584b",
+      "votes": [
+        "MAJORITY_AGREE",
+        "MAJORITY_AGREE"
+      ],
+      "verdict": "SUPPORTED",
+      "reasoning": "The value_eth field is 0.134689219999999998, which is numerically greater than 0.1 ETH.",
+      "render_match": true,
+      "expect_met": true,
+      "ok": true,
+      "duration_s": 97.2
+    },
+    {
+      "scenario": "CONTRADICTED-expected",
+      "network": "ethereum",
+      "target": "0xf60c4b47b15b27d37b2d95f28d312303ca18f84f6c085f76f20029d89ad8081f",
+      "question": "The transaction sent 5000 ETH to a burn address.",
+      "started": 1792486373.765128,
+      "api_status": 200,
+      "provider": "etherscan",
+      "tx_status": "success",
+      "submit_tx": "0x9295ce3d796aa2196b1906d5d302653f67bd4e85999b44f6c8c70dfb6a7394c5",
+      "claim_id": 9,
+      "adjudicate_tx": "0x673d8f572dca766929ea7142a1761617951c54f867676487f7901de6c30b7ea9",
+      "votes": [
+        "MAJORITY_AGREE",
+        "MAJORITY_AGREE"
+      ],
+      "verdict": "CONTRADICTED",
+      "reasoning": "Claim says 5000 ETH sent to a burn address. Evidence shows value_eth:0 and to:0xA0b869..., which is not a burn address.",
+      "render_match": true,
+      "expect_met": true,
+      "ok": true,
+      "duration_s": 117.5
+    },
+    {
+      "scenario": "INSUFFICIENT-expected",
+      "network": "solana",
+      "target": "2DZcFgJm3n87YN74B42LenHN1gjGMmZCjhKRASyQpLzL67cuBq3XAQ83VmwwSt4CRZ2KMwchK7nFjHwaNCbsMofm",
+      "question": "The transaction was an audited and verified institutional transfer.",
+      "started": 1792486493.261755,
+      "api_status": 200,
+      "provider": "solscan",
+      "tx_status": "success",
+      "submit_tx": "0x70a83f80f09bfb0143ae9f6987628b6e68ffde190325ecd3024912b74decdc16",
+      "claim_id": 10,
+      "ok": false,
+      "error": "Request to https://studio.genlayer.com/api failed: Response ended prematurely"
+    },
+    {
+      "step": "e2e_summary",
+      "ok": 2,
+      "total": 3,
+      "ts": 1792486564.1070914
+    },
+    {
+      "step": "final_state",
+      "stats": {
+        "total_claims": "10",
+        "next_id": "11"
+      },
+      "ts": 1792486699.4408073
+    }
+  ]
+}

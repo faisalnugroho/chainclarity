@@ -89,6 +89,18 @@
       "total": 3,
       "contract": "0x3996E1832B2d7a8Ec10310DE596B93cB93CD7e21",
       "note_superseded": null
+    },
+    {
+      "step": "keyless_mode_enabled",
+      "note": "API now prefers keyed Etherscan/Solscan when env keys exist; otherwise keyless Blockscout+publicRPC (ETH, dual-source status) / Solana JSON-RPC (SOL). provider label = canonical source; actual fetcher disclosed in limitations. Deployed service runs keyless.",
+      "service": "chainclarity-api (systemd, port 8902) + chainclarity-tunnel (cloudflared quick tunnel, EPHEMERAL URL)",
+      "live_tests": {
+        "eth_tx": "0xf60c4b47b15b27d37b2d95f28d312303ca18f84f6c085f76f20029d89ad8081f",
+        "eth_result": "success, dual-source agree=True (blockscout + publicnode RPC)",
+        "sol_tx": "2DZcFgJm3n87YN74B42LenHN1gjGMmZCjhKRASyQpLzL67cuBq3XAQ83VmwwSt4CRZ2KMwchK7nFjHwaNCbsMofm",
+        "sol_result": "success (mainnet-beta RPC, fee 5000 lamport, slot 430000000)"
+      },
+      "ts": "2026-10-20"
     }
   ]
 }

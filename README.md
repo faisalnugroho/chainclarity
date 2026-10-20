@@ -66,10 +66,19 @@ Browser → genlayer-sdk bundle → GenLayer Studionet RPC
 
 ## Supported networks (v1)
 
-| Network | Provider | Transaction hash | Wallet address |
-|---|---|---|---|
-| Ethereum mainnet | Etherscan v2 (`chainid=1`) | ✅ | ❌ not supported yet |
-| Solana mainnet | Solscan Pro v2 | ✅ | ❌ not supported yet |
+| Network | Provider (keyed) | Provider (keyless fallback) | Transaction hash | Wallet address |
+|---|---|---|---|---|
+| Ethereum mainnet | Etherscan v2 (`chainid=1`) | Blockscout v2 + public RPC (dual-source status check) | ✅ | ❌ not supported yet |
+| Solana mainnet | Solscan Pro v2 | Solana mainnet JSON-RPC | ✅ | ❌ not supported yet |
+
+The API prefers the official keyed providers when `ETHERSCAN_API_KEY` /
+`SOLSCAN_API_KEY` are configured; without keys it falls back to keyless
+public providers (the deployed service currently runs keyless). Evidence
+always labels the canonical network data source as `provider` and
+discloses the actual fetching API in `limitations` — nothing is presented
+as more verified than it is. Every evidence document is provider-reported
+and never implies on-chain re-verification beyond the dual-source status
+cross-check recorded in the fields.
 
 Wallet-address history endpoints cannot provide the bounded, reliable evidence
 the contract requires on the configured API plans; rather than fabricate

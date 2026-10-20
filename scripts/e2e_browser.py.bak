@@ -1,0 +1,218 @@
+#!/usr/bin/env python3
+"""ChainClarity live E2E: real browser on the PRODUCTION GitHub Pages site.
+
+Flow per scenario:
+  fresh context -> open https://faisalnugroho.github.io/chainclarity/
+  -> verify page loaded + API banner state -> hook SDK.createClient (arg
+  capture) -> fill network/target/question -> click Analyze -> await API
+  evidence -> await on-chain submit+adjudicate (45-180s, fire-and-forget)
+  -> read rendered verdict -> read back the claim on-chain with an
+  INDEPENDENT client -> assert rendered == chain -> record tx hashes.
+
+Evidence -> docs/e2e_log.json (flush per scenario). No secrets involved.
+"""
+import json
+import re
+import sys
+import time
+import urllib.request
+import urllib.error
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+LOG = ROOT / 'docs/e2e_log.json'
+SITE = 'https://faisalnugroho.github.io/chainclarity/'
+API = 'https://nec-climb-acdbentity-screens.trycloudflare.com'
+CONTRACT = '0x3996E1832B2d7a8Ec10310DE596B93cB93CD7e21'
+CFC = 'http://127.0.0.1:9377'
+
+ETH_TX = '0xf60c4b47b15b27d37b2d95f28d312303ca18f84f6c085f76f20029d89ad8081f'
+SOL_TX = '2DZcFgJm3n87YN74B42LenHN1gjGMmZCjhKRASyQpLzL67cuBq3XAQ83VmwwSt4CRZ2KMwchK7nFjHwaNCbsMofm'
+
+SCENARIOS = [
+    {'id': 'SUPPORTED', 'network': 'ethereum', 'target': ETH_TX,
+     'question': 'The transaction transferred value between two addresses.'},
+    {'id': 'CONTRADICTED', 'network': 'ethereum', 'target': ETH_TX,
+     'question': 'The transaction sent 5000 ETH to Vitalik.'
+                 ' (claim expects contradiction)'},
+    {'id': 'INSUFFICIENT', 'network': 'solana', 'target': SOL_TX,
+     'question': 'The transaction was a scam token rug pull.'},
+]
+
+
+def log(entry):
+    LOG.parent.mkdir(parents=True, exist_ok=True)
+    logd = json.loads(LOG.read_text()) if LOG.exists() else {'entries': []}
+    logd['entries'].append(entry)
+    LOG.write_text(json.dumps(logd, indent=2))
+
+
+def cf(method, path, body=None, timeout=60):
+    data = json.dumps(body).encode() if body is not None else None
+    req = urllib.request.Request(CFC + path, data=data, method=method,
+                                 headers={'Content-Type': 'application/json'})
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            return json.loads(r.read() or b'{}')
+    except urllib.error.HTTPError as e:
+        raise RuntimeError('CF %s %s -> %s: %s' % (
+            method, path, e.code, e.read().decode('utf-8', 'replace')[:200]))
+
+
+USER = 'cc-e2e'
+
+
+def evaluate(tab, expr, timeout=90):
+    return cf('POST', f'/tabs/{tab}/evaluate',
+              {'userId': USER, 'expression': expr, 'timeout': timeout})
+
+
+def wait_ready(tab, want_api=True, tries=30):
+    for _ in range(tries):
+        try:
+            r = evaluate(tab, '''(()=>({rs:document.readyState,
+  status:document.getElementById("status")?.textContent||"",
+  hasBtn:!!document.getElementById("go")}))()''')
+            d = r.get('result') or r
+            if d.get('rs') == 'complete' and d.get('hasBtn'):
+                st = d.get('status', '')
+                if not want_api or ('not reachable' not in st):
+                    return d
+        except Exception:
+            pass
+        time.sleep(2)
+    raise RuntimeError('page not ready')
+
+
+HOOK = '''
+window.__e2e = {calls: [], verdict: null, done: false, err: null};
+if (!window.__hooked){
+  window.__hooked = true;
+  const SDK = window.GenLayerSDK;
+  const orig = SDK.createClient.bind(SDK);
+  SDK.createClient = function(cfg){
+    const c = orig(cfg);
+    const ow = c.writeContract.bind(c);
+    c.writeContract = async function(o){
+      window.__e2e.calls.push({fn: o.functionName,
+        args: JSON.parse(JSON.stringify(o.args))});
+      return ow(o);
+    };
+    return c;
+  };
+}
+"hooked"
+'''
+
+RUN = '''
+(async ()=>{
+  try{
+    document.getElementById("network").value = "%(network)s";
+    document.getElementById("target").value = %(target)r;
+    document.getElementById("question").value = %(question)r;
+    document.getElementById("go").click();
+    window.__e2e.started = Date.now();
+    return "clicked";
+  }catch(e){ window.__e2e.err = String(e); return "err:"+e; }
+})()
+'''
+
+POLL = '''(()=>{
+  const el = document.getElementById("status");
+  const adj = document.getElementById("resAdjudication")?.textContent || "";
+  return JSON.stringify({status: el ? el.textContent : "",
+    done: /Done/.test(el ? el.textContent : ""),
+    adjudication: adj.slice(0, 400)});
+})()'''
+
+
+def main():
+    health = cf('GET', '/health')
+    results = []
+    for sc in SCENARIOS:
+        entry = {'scenario': sc['id'], 'network': sc['network'],
+                 'target': sc['target'], 'started': time.time()}
+        user = USER
+        try:
+            r = cf('POST', '/tabs', {'url': SITE, 'userId': user,
+                                     'sessionKey': sc['id']})
+            tab = r.get('tabId') or r.get('id')
+            entry['tab'] = tab
+            ready = wait_ready(tab)
+            entry['page_status'] = ready.get('status', '')[:120]
+            evaluate(tab, HOOK)
+            evaluate(tab, RUN % sc)
+            # poll up to 5 min for full completion
+            final = None
+            for _ in range(100):
+                time.sleep(3)
+                try:
+                    p = evaluate(tab, POLL)
+                    d = json.loads(p.get('result') or p) \
+                        if isinstance(p.get('result') or p, str) else p
+                    if d.get('done'):
+                        final = d
+                        break
+                except Exception:
+                    continue
+            entry['final_status'] = (final or {}).get('status', '')[:200]
+            entry['rendered'] = (final or {}).get('adjudication', '')[:400]
+            calls = evaluate(tab, 'JSON.stringify(window.__e2e.calls)')
+            entry['captured_calls'] = json.loads(
+                calls.get('result') or calls)
+            # independent on-chain readback with a fresh SDK client
+            readback = evaluate(tab, '''
+(async ()=>{
+  try{
+    const SDK = window.GenLayerSDK;
+    const c = SDK.createClient({chain: SDK.studionet});
+    const id = window.__e2e.lastClaimId || null;
+    // find last claim id from calls
+    let cid = null;
+    for (const c2 of window.__e2e.calls){
+      if (c2.fn === "adjudicate") cid = c2.args[0];
+    }
+    if (cid === null) return JSON.stringify({err:"no adjudicate call"});
+    const rec = await c.readContract({address: "%s",
+      functionName: "get_claim", args: [String(cid)]});
+    return JSON.stringify({claim_id: cid,
+      record: typeof rec === "string" ? JSON.parse(rec) : rec});
+  }catch(e){ return JSON.stringify({err: String(e).slice(0,200)}); }
+})()''' % CONTRACT, timeout=60)
+            rb = json.loads(readback.get('result') or readback)
+            entry['onchain_readback'] = {
+                'claim_id': rb.get('claim_id'),
+                'verdict': (rb.get('record') or {}).get('verdict'),
+                'reasoning': ((rb.get('record') or {}).get('reasoning')
+                              or '')[:150],
+                'err': rb.get('err')}
+            rendered_v = re.search(
+                r'(SUPPORTED|CONTRADICTED|INSUFFICIENT_EVIDENCE)',
+                entry['rendered'])
+            chain_v = entry['onchain_readback']['verdict']
+            entry['match'] = bool(rendered_v) and \
+                rendered_v.group(1) == chain_v
+            entry['ok'] = entry['match']
+        except Exception as e:
+            entry['ok'] = False
+            entry['error'] = str(e)[:300]
+        finally:
+            try:
+                cf('POST', f'/tabs/{tab}/close', {'userId': user})
+            except Exception:
+                pass
+        entry['duration_s'] = round(time.time() - entry['started'], 1)
+        results.append(entry)
+        log(entry)                      # flush per scenario
+        print(json.dumps({k: entry.get(k) for k in
+                          ('scenario', 'ok', 'match', 'rendered',
+                           'onchain_readback', 'error')},
+                         default=str)[:600], flush=True)
+    ok = sum(1 for r in results if r.get('ok'))
+    log({'step': 'e2e_summary', 'ok': ok, 'total': len(results)})
+    print('E2E %d/%d' % (ok, len(results)))
+    sys.exit(0 if ok == len(results) else 1)
+
+
+if __name__ == '__main__':
+    main()
