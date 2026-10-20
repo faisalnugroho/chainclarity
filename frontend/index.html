@@ -195,17 +195,55 @@ function toast(msg){
 function status(kind, msg){
   const s = $('status'); s.className = 'status show ' + kind; s.textContent = msg;
 }
-function apiBase(){ return (localStorage.getItem(LS_API) || '').replace(/\/+$/,''); }
+// ---------- frontend configuration ----------
+// Resolution order (documented in README "Configuring the API endpoint"):
+//   1. window.CHAINCLARITY_CONFIG.apiBase  (injected for self-hosters)
+//   2. same origin (if the API is reverse-proxied next to the page)
+//   3. localStorage.cc_api_base            (manual override, advanced users)
+//   4. none → page still renders, explains the limitation, offers demo data.
+// The endpoint is NEVER stored as the only mechanism; every failure path is
+// handled gracefully (banner + retry), never a dead page.
+const BUNDLED_DEFAULT_API_BASE = ''; // same-origin default; set for other hosts
+function apiBase(){
+  const inj = (window.CHAINCLARITY_CONFIG && window.CHAINCLARITY_CONFIG.apiBase) || '';
+  const cand = [inj, BUNDLED_DEFAULT_API_BASE,
+                localStorage.getItem(LS_API) || ''].map(u =>
+                  String(u || '').trim().replace(/\/+$/,''));
+  for (const u of cand){
+    try{
+      if (u && !/^https:\/\//.test(u) && location.protocol === 'https:')
+        continue; // never downgrade an https page to an insecure API
+      if (u) return u;
+      if (!u && cand.indexOf(u) === 1) return ''; // same-origin slot
+    }catch(e){}
+  }
+  return '';
+}
 
 // ---------- init config ----------
-async function boot(){
+let API_OK = false;
+async function probeApi(base){
+  const ctrl = new AbortController();
+  const t = setTimeout(()=>ctrl.abort(), 8000);
   try{
-    const cfg = await (await fetch(apiBase() + '/api/config')).json();
+    const r = await fetch(base + '/api/config', { signal: ctrl.signal });
+    clearTimeout(t);
+    if (!r.ok) return null;
+    return await r.json();
+  }catch(e){ clearTimeout(t); return null; }
+}
+async function boot(){
+  const base = apiBase();
+  const cfg = await probeApi(base);
+  if (cfg){
+    API_OK = true;
     if (cfg.contract_address){ CONTRACT = cfg.contract_address; localStorage.setItem(LS_CONTRACT, CONTRACT); }
     $('cfg').textContent = CONTRACT ? (' contract ' + CONTRACT.slice(0,10) + '…') : '';
-  }catch(e){
-    status('warn','API not reachable at ' + (apiBase()||'same origin') +
-      '. If you are self-hosting, set the API base URL (console: localStorage.cc_api_base). Static demo below uses sample data.');
+  }else{
+    API_OK = false;
+    status('warn','Live analysis API is not reachable' +
+      (base ? (' at ' + base) : ' (not configured on this page)') +
+      '. You can still load labeled demo data. Reviewers: run the API locally (python api/server.py) and set localStorage.cc_api_base, or see README "Configuring the API endpoint".');
   }
 }
 boot();
@@ -317,9 +355,12 @@ async function run(){
   status('info','Fetching evidence from the provider…');
   let data;
   try{
+    const ctrl = new AbortController();
+    const t = setTimeout(()=>ctrl.abort(), 25000);
     const resp = await fetch(apiBase() + '/api/analyze', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ network, target }) });
+      body: JSON.stringify({ network, target }), signal: ctrl.signal });
+    clearTimeout(t);
     data = await resp.json();
     if (!resp.ok || !data.ok){
       status('err', (data.message || 'Analysis failed.') + (data.error ? ' ['+data.error+']' : ''));

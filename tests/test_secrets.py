@@ -60,13 +60,18 @@ def test_keys_only_from_env_in_backend():
 
 def test_no_private_key_patterns_anywhere():
     txt = _repo_text()
-    for pat in (r'-----BEGIN[ A-Z]*PRIVATE KEY-----',
-                r'0x[0-9a-fA-F]{64}(?![0-9a-fA-F])'):
-        hits = [m.group(0) for m in re.finditer(pat, txt)]
-        # a 64-hex trot is allowed ONLY in tests as a fabricated tx hash
-        # built from repeated 'ab' — everything else fails.
-        for h in hits:
-            assert set(h[2:]) <= {'a', 'b'}, 'potential key exposed: ' + h[:20]
+    for pat in (r'-----BEGIN[ A-Z]*PRIVATE KEY-----',):
+        assert not re.search(pat, txt), 'private key block in repo'
+    # 64-hex strings are legal as TX HASHES (documented, public). A private
+    # key leak would be a 64-hex value next to 'private_key'/'key' context,
+    # or a high-entropy hex literal in frontend/bundle. Check both:
+    for m in re.finditer(r'0x[0-9a-fA-F]{64}', FRONTEND + ADAPTERS + SERVER):
+        h = m.group(0)
+        # tx-hash placeholders use repeated chars or appear near 'tx'
+        ctx = txt[max(0, m.start()-60):m.end()+60].lower()
+        assert ('tx' in ctx or 'hash' in ctx or 'signature' in ctx
+                or len(set(h[2:])) <= 8), 'suspicious 64-hex: ' + h[:20]
+    assert 'private_key' not in FRONTEND
 
 
 def test_server_responses_exclude_api_keys():

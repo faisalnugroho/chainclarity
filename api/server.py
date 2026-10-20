@@ -41,9 +41,30 @@ def _rate_ok(ip):
 class Handler(BaseHTTPRequestHandler):
     server_version = 'ChainClarity/1.0'
 
+    # Restrictive CORS: only the deployed GitHub Pages origin may call the
+    # API from a browser (override with CORS_ALLOWED_ORIGINS, comma-sep).
+    ALLOWED_ORIGINS = [o.strip() for o in os.environ.get('CORS_ALLOWED_ORIGINS',
+        'https://faisalnugroho.github.io').split(',') if o.strip()]
+
+    def _cors(self):
+        origin = self.headers.get('Origin', '')
+        if origin in self.ALLOWED_ORIGINS:
+            self.send_header('Access-Control-Allow-Origin', origin)
+            self.send_header('Vary', 'Origin')
+            self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+            self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+            self.send_header('Access-Control-Max-Age', '600')
+
+    def do_OPTIONS(self):
+        self.send_response(204)
+        self._cors()
+        self.send_header('Content-Length', '0')
+        self.end_headers()
+
     def _send(self, code, obj):
         body = json.dumps(obj).encode('utf-8')
         self.send_response(code)
+        self._cors()
         self.send_header('Content-Type', 'application/json')
         self.send_header('Content-Length', str(len(body)))
         self.send_header('X-Content-Type-Options', 'nosniff')

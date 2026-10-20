@@ -1,0 +1,24 @@
+[Unit]
+Description=ChainClarity API
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/chainclarity/api
+# Secrets come ONLY from the EnvironmentFile below (root-owned, 0600).
+# NEVER put key values in this unit file, in logs, or in the repo.
+EnvironmentFile=/etc/chainclarity/env
+Environment=CHAINCLARITY_CONTRACT=0x3996E1832B2d7a8Ec10310DE596B93cB93CD7e21
+Environment=CORS_ALLOWED_ORIGINS=https://faisalnugroho.github.io
+Environment=PORT=8902
+ExecStart=/usr/bin/python3 /home/ubuntu/chainclarity/api/server.py
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/home/ubuntu/chainclarity
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

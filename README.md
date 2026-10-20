@@ -86,6 +86,48 @@ results, address analysis is explicitly disabled (the API returns
 | Frontend | https://faisalnugroho.github.io/chainclarity/ |
 | Evidence log | `docs/deployment_log.json` |
 
+## Configuring the API endpoint (frontend)
+
+The frontend resolves its API base in this order (first hit wins):
+
+1. `window.CHAINCLARITY_CONFIG = { apiBase: 'https://…' }` — for self-hosters
+   injecting config into the page before `index.html`'s script runs.
+2. Same origin — when the API is reverse-proxied next to the page (recommended
+   for a stable deployment).
+3. `localStorage.cc_api_base` — manual override for advanced users/reviewers
+   running the API locally (`python api/server.py`, then set the absolute
+   `https://` URL in the browser console).
+4. None reachable → the page renders normally, shows a clear warning banner,
+   and labeled demo data remains available. It never becomes a dead page.
+
+An `http://` API is refused on an `https://` page (no protocol downgrade).
+All API calls carry an abort timeout (8 s config probe / 25 s analyze) and
+render a recoverable error on failure.
+
+## Server deployment (VPS + cloudflared quick tunnel)
+
+The API ships as a systemd unit (`deploy/chainclarity-api.service`) reading
+secrets **only** from a root-owned env file. Install steps (run on the VPS):
+
+```bash
+# 1. Secrets (interactive; values never touch shell history, repo, or logs)
+sudo cp deploy/install_secrets.sh /root/ && sudo chmod 700 /root/install_secrets.sh
+sudo /root/install_secrets.sh          # prompts for both keys, writes /etc/chainclarity/env (0600)
+
+# 2. Service
+sudo cp deploy/chainclarity-api.service /etc/systemd/system/
+sudo systemctl daemon-reload && sudo systemctl enable --now chainclarity-api
+curl -s http://127.0.0.1:8902/api/health   # {"status":"ok",...}
+
+# 3. Tunnel (quick tunnel = EPHEMERAL: URL changes on VPS restart)
+cloudflared tunnel --url http://127.0.0.1:8902 --no-autoupdate   # note the trycloudflare.com URL
+```
+
+The quick-tunnel URL is ephemeral by design; when it changes, set the new URL
+via `window.CHAINCLARITY_CONFIG` or `localStorage.cc_api_base` (see
+"Configuring the API endpoint"). CORS is restricted to the GitHub Pages
+origin; the service runs with `ProtectSystem=strict` and `NoNewPrivileges`.
+
 ## Running locally
 
 ```bash
