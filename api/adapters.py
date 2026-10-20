@@ -70,6 +70,8 @@ def _fetch_json(url, headers=None):
                 raise AdapterError('response_too_large')
             status = resp.status
     except urllib.error.HTTPError as e:
+        if e.code == 404:
+            raise AdapterError('tx_not_found', 404)
         if e.code == 429:
             raise AdapterError('rate_limited', 429)
         raise AdapterError('provider_http_error', 502)
@@ -284,15 +286,29 @@ def analyze(network: str, target: str) -> dict:
     """Validated entrypoint used by the API layer. Accepts a transaction
     hash/signature. Wallet-address history is NOT supported (documented
     limitation: address-history endpoints on the configured API plans
-    cannot provide reliable bounded evidence)."""
+    cannot provide reliable bounded evidence).
+
+    Provider priority: official keyed APIs when credentials are configured
+    (ETHERSCAN_API_KEY / SOLSCAN_API_KEY), otherwise keyless public
+    providers (Blockscout + public RPC / Solana JSON-RPC). All output is
+    provider-reported and labeled as such either way.
+    """
     t = validate_target(network, target)
     is_tx = ETH_HASH_RE.match(t) if network == 'ethereum' \
         else SOL_SIG_RE.match(t)
     if not is_tx:
         raise AdapterError('address_not_supported', 400)
     if network == 'ethereum':
-        return fetch_ethereum_tx(t, os_env('ETHERSCAN_API_KEY'))
-    return fetch_solana_tx(t, os_env('SOLSCAN_API_KEY'))
+        key = os_env('ETHERSCAN_API_KEY')
+        if key:
+            return fetch_ethereum_tx(t, key)
+        import adapters_keyless
+        return adapters_keyless.fetch_ethereum_tx_keyless(t)
+    key = os_env('SOLSCAN_API_KEY')
+    if key:
+        return fetch_solana_tx(t, key)
+    import adapters_keyless
+    return adapters_keyless.fetch_solana_tx_keyless(t)
 
 
 def os_env(name):

@@ -203,7 +203,7 @@ function status(kind, msg){
 //   4. none → page still renders, explains the limitation, offers demo data.
 // The endpoint is NEVER stored as the only mechanism; every failure path is
 // handled gracefully (banner + retry), never a dead page.
-const BUNDLED_DEFAULT_API_BASE = ''; // same-origin default; set for other hosts
+const BUNDLED_DEFAULT_API_BASE = 'https://nec-climb-acdbentity-screens.trycloudflare.com'; // EPHEMERAL quick tunnel — may change on VPS restart; page falls back to last-known endpoint + graceful error
 function apiBase(){
   const inj = (window.CHAINCLARITY_CONFIG && window.CHAINCLARITY_CONFIG.apiBase) || '';
   const cand = [inj, BUNDLED_DEFAULT_API_BASE,
@@ -221,6 +221,10 @@ function apiBase(){
 }
 
 // ---------- init config ----------
+// The VPS tunnel URL is EPHEMERAL (cloudflared quick tunnel). If the bundled
+// default is unreachable, try the last-known-good URL saved locally, then
+// fail gracefully.
+const LAST_GOOD_API = 'cc_api_last_good';
 let API_OK = false;
 async function probeApi(base){
   const ctrl = new AbortController();
@@ -234,9 +238,15 @@ async function probeApi(base){
 }
 async function boot(){
   const base = apiBase();
-  const cfg = await probeApi(base);
+  let cfg = await probeApi(base);
+  if (!cfg){
+    const last = localStorage.getItem(LAST_GOOD_API);
+    if (last && last !== base) cfg = await probeApi(last);
+    if (cfg) status('info','Using last-known API endpoint (the default one is down).');
+  }
   if (cfg){
     API_OK = true;
+    if (base) localStorage.setItem(LAST_GOOD_API, base);
     if (cfg.contract_address){ CONTRACT = cfg.contract_address; localStorage.setItem(LS_CONTRACT, CONTRACT); }
     $('cfg').textContent = CONTRACT ? (' contract ' + CONTRACT.slice(0,10) + '…') : '';
   }else{

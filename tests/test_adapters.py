@@ -347,3 +347,68 @@ def test_error_message_never_contains_key():
     except AdapterError as e:
         assert 'SECRETKEY123' not in error_response(e.code)['message']
         assert 'SECRETKEY123' not in str(e)
+
+
+# ------------------------------------------------ keyless fallback adapters
+def test_analyze_falls_back_to_keyless_when_no_keys(monkeypatch):
+    import adapters_keyless as ak
+    adapters._CACHE.clear()
+    monkeypatch.delenv('ETHERSCAN_API_KEY', raising=False)
+    bs_tx = {'hash': ETH_TX, 'status': 'ok', 'block_number': 100,
+             'from': {'hash': '0x' + 'a' * 40},
+             'to': {'hash': '0x' + 'b' * 40}, 'value': '0', 'gas_used': '1',
+             'fee': {'value': '100'}, 'timestamp': 1700000000}
+    bodies = iter([bs_tx, {'status': '0x1'}])
+    with mock.patch.object(ak, '_bs_get',
+                           side_effect=lambda p: (200, next(bodies))), \
+         mock.patch.object(ak, '_rpc',
+                           return_value={'status': '0x1'}):
+        ev = analyze('ethereum', ETH_TX)
+    assert ev['tx_status'] == 'success'
+    assert 'blockscout' in ev['provider']
+    assert ev['fields']['independent_rpc_status_agrees'] == 'True'
+
+
+def test_analyze_solana_falls_back_keyless(monkeypatch):
+    import adapters_keyless as ak
+    adapters._CACHE.clear()
+    monkeypatch.delenv('SOLSCAN_API_KEY', raising=False)
+    sol_tx = {'slot': 123, 'blockTime': 1700000000, 'meta': {
+        'err': None, 'fee': 5000, 'preBalances': [10 ** 9, 0],
+        'postBalances': [10 ** 9 - 5000, 0]},
+        'transaction': {'message': {'accountKeys': ['WallA' + 'x' * 39,
+                                                    'WallB' + 'y' * 39]}}}
+    with mock.patch.object(ak, '_rpc', return_value=sol_tx):
+        ev = analyze('solana', SOL_TX)
+    assert ev['tx_status'] == 'success' and ev['provider'] == 'solana-rpc'
+    assert ev['fields']['fee_sol'] == '0.000005'
+
+
+def test_keyless_sol_tx_not_found(monkeypatch):
+    import adapters_keyless as ak
+    adapters._CACHE.clear()
+    monkeypatch.delenv('SOLSCAN_API_KEY', raising=False)
+    with mock.patch.object(ak, '_rpc', return_value=None):
+        try:
+            analyze('solana', SOL_TX)
+            assert False
+        except AdapterError as e:
+            assert e.code == 'tx_not_found'
+
+
+def test_keyless_eth_disagreement_flagged(monkeypatch):
+    import adapters_keyless as ak
+    adapters._CACHE.clear()
+    monkeypatch.delenv('ETHERSCAN_API_KEY', raising=False)
+    bs_tx = {'hash': ETH_TX, 'status': 'ok', 'block_number': 100,
+             'from': {'hash': '0x' + 'a' * 40},
+             'to': {'hash': '0x' + 'b' * 40}, 'value': '0', 'gas_used': '1',
+             'fee': {'value': '100'}, 'timestamp': 1700000000}
+    bodies = iter([bs_tx, {'status': '0x0'}])   # RPC says FAILED
+    with mock.patch.object(ak, '_bs_get',
+                           side_effect=lambda p: (200, next(bodies))), \
+         mock.patch.object(ak, '_rpc',
+                           return_value={'status': '0x0'}):
+        ev = analyze('ethereum', ETH_TX)
+    assert ev['fields']['independent_rpc_status_agrees'] == 'False'
+    assert any('disagrees' in l for l in ev['limitations'])

@@ -93,6 +93,9 @@ def _start_server():
     os.environ['CHAINCLARITY_CONTRACT'] = '0x' + '11' * 20
     os.environ['ETHERSCAN_API_KEY'] = 'TESTKEY'
     os.environ['SOLSCAN_API_KEY'] = 'TESTKEY'
+    __import__('atexit').register(lambda: [os.environ.pop(k, None) for k in
+                                           ('ETHERSCAN_API_KEY',
+                                            'SOLSCAN_API_KEY')])
     srv._CONTRACT_ADDRESS = '0x' + '11' * 20  # read at import time
     s = srv.ThreadingHTTPServer(('127.0.0.1', 0), srv.Handler)
     t = threading.Thread(target=s.serve_forever, daemon=True)
