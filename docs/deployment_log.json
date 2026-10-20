@@ -7,7 +7,8 @@
       "contract_address": "0x3996E1832B2d7a8Ec10310DE596B93cB93CD7e21",
       "contract_sha256": "9f2c6ea69515ce83a8d5ee3a18f26ca1ed8319ea72d39e814d7d14ac59c10f5b",
       "deployer": "0x25EDf5b1121b4aa80a9A2aF317F9dE9e440Ef9Fb",
-      "ts": 1792476560.3533983
+      "ts": 1792476560.3533983,
+      "note_superseded": null
     },
     {
       "step": "scenario",
@@ -15,7 +16,8 @@
       "note": "The transaction transferred 1.5 ETH from one address to anot",
       "submit_tx": "0xd53071c133bac79160120701a899ed15e0def8983a09beb1bed9aa26655b5613",
       "ok": false,
-      "error": "invalid literal for int() with base 10: \"{'raw': [9], 'readable': '1'}\""
+      "error": "invalid literal for int() with base 10: \"{'raw': [9], 'readable': '1'}\"",
+      "note_superseded": "harness bug (claim-id payload parse / missing fail-safe branch); contract behavior itself correct \u2014 re-run see later scenarios"
     },
     {
       "step": "scenario",
@@ -23,20 +25,23 @@
       "note": "The transaction sent 100 ETH to the burn address.",
       "submit_tx": "0x376e2d6ff73a77ebcaba007350f033d3c3085a0da0f6e6bb34372c4a3ddaff7c",
       "ok": false,
-      "error": "invalid literal for int() with base 10: \"{'raw': [17], 'readable': '2'}\""
+      "error": "invalid literal for int() with base 10: \"{'raw': [17], 'readable': '2'}\"",
+      "note_superseded": "harness bug (claim-id payload parse / missing fail-safe branch); contract behavior itself correct \u2014 re-run see later scenarios"
     },
     {
       "step": "scenario",
       "idx": 2,
       "note": "The transaction was legitimate and verified by auditors.",
       "ok": false,
-      "error": "submit_claim reverted: {'raw': 'AWV2aWRlbmNlX21hbGZvcm1lZA==', 'status': 'rollback', 'payload': 'evidence_malformed'}"
+      "error": "submit_claim reverted: {'raw': 'AWV2aWRlbmNlX21hbGZvcm1lZA==', 'status': 'rollback', 'payload': 'evidence_malformed'}",
+      "note_superseded": "harness bug (claim-id payload parse / missing fail-safe branch); contract behavior itself correct \u2014 re-run see later scenarios"
     },
     {
       "step": "smoke_summary",
       "ok_count": 0,
       "total": 3,
-      "contract": "0x3996E1832B2d7a8Ec10310DE596B93cB93CD7e21"
+      "contract": "0x3996E1832B2d7a8Ec10310DE596B93cB93CD7e21",
+      "note_superseded": null
     },
     {
       "step": "scenario",
@@ -50,7 +55,8 @@
       "vote1": "MAJORITY_AGREE",
       "vote2": "MAJORITY_AGREE",
       "ok": true,
-      "duration_s": 93.6
+      "duration_s": 93.6,
+      "note_superseded": null
     },
     {
       "step": "scenario",
@@ -64,7 +70,8 @@
       "vote1": "MAJORITY_AGREE",
       "vote2": "MAJORITY_AGREE",
       "ok": true,
-      "duration_s": 95.5
+      "duration_s": 95.5,
+      "note_superseded": null
     },
     {
       "step": "scenario",
@@ -73,13 +80,15 @@
       "submit_tx": "0x270511c5863c2f59903aed65449644b11ad3aa2e783858788a15ed91b023bc00",
       "verdict": "GUARD_REJECTED (evidence_malformed)",
       "ok": true,
-      "duration_s": 40.1
+      "duration_s": 40.1,
+      "note_superseded": null
     },
     {
       "step": "smoke_summary",
       "ok_count": 3,
       "total": 3,
-      "contract": "0x3996E1832B2d7a8Ec10310DE596B93cB93CD7e21"
+      "contract": "0x3996E1832B2d7a8Ec10310DE596B93cB93CD7e21",
+      "note_superseded": null
     }
   ]
 }
