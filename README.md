@@ -198,22 +198,25 @@ deployment).
 
 ## Tests
 
-75 automated tests, all runnable offline with mocks:
+115 automated tests, all runnable offline with mocks:
 
 - `tests/direct` (31) — contract behavior on a real GenVM: input validation,
   all three verdicts, fail-safe on malformed/unknown LLM output, idempotent
   re-adjudication, prompt-injection, state transitions, record retrieval.
-- `tests/test_adapters.py` (26) — Etherscan/Solscan adapters: success, failed,
+- `tests/test_adapters.py` (30) — keyed and keyless adapters (Etherscan /
+  Blockscout+RPC fallback / Solscan / Solana JSON-RPC): success, failed,
   pending, unknown, not-found, quota, timeout, 429, malformed, caching,
-  decimal formatting, no-key leakage in errors.
+  decimal formatting, no-key leakage in errors, dual-source disagreement.
 - `tests/test_integration.py` (12) — frontend↔API↔contract source-to-source
   pins, live HTTP roundtrip against a mocked provider, error taxonomy.
 - `tests/test_secrets.py` (6) — no key literals in frontend/backend/bundle,
   no private-key patterns anywhere in the repo.
+- `tests/test_config_security.py` (5) — frontend API-endpoint resolution
+  chain, https-only enforcement, timeout pins, restrictive CORS.
 
 Mocks are used for determinism; **mocks are not proof of live integration** —
-live evidence is in `docs/deployment_log.json` (deploy tx + per-scenario tx
-hashes on Studionet).
+live evidence is in `docs/deployment_log.json` and `docs/e2e_log.json`
+(deploy tx + per-scenario tx hashes + on-chain readbacks on Studionet).
 
 ## License
 
