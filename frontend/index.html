@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ChainClarity — understand any transaction in plain English</title>
+<meta name="description" content="Paste a transaction hash, pick a network, get a plain-English explanation backed by public blockchain evidence — adjudicated on GenLayer.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script src="genlayer-sdk.bundle.js"></script>
+<style>
+:root{
+  --navy:#070D1A; --navy2:#0C1526; --card:#101B30; --card2:#152238;
+  --text:#E8F0FA; --muted:#8FA3BC; --faint:#5A6D87;
+  --cyan:#3ED6D0; --cyan-dim:#1F8E8A;
+  --ok:#4ADE80; --warn:#F5B54A; --bad:#F87A7A;
+  --edge:rgba(255,255,255,.12); --edge2:rgba(62,214,208,.45);
+  --r:14px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--navy);color:var(--text);
+  font:16px/1.6 "Inter",sans-serif;min-height:100vh}
+body::before{content:'';position:fixed;inset:0;z-index:-1;
+  background:radial-gradient(900px 500px at 75% -10%, #12253D 0%, transparent 60%),
+             radial-gradient(700px 400px at 10% 5%, #0E1D33 0%, transparent 55%);}
+.wrap{max-width:980px;margin:0 auto;padding:0 20px}
+header{padding:18px 0;border-bottom:1px solid var(--edge);
+  background:rgba(7,13,26,.85);position:sticky;top:0;z-index:10;
+  backdrop-filter:blur(10px)}
+.bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:10px;font:800 19px "Sora"}
+.logo .mark{width:28px;height:28px;border-radius:8px;
+  background:linear-gradient(150deg,var(--cyan),#1F6F9E);
+  box-shadow:0 0 18px rgba(62,214,208,.35);
+  display:flex;align-items:center;justify-content:center;
+  color:#04252B;font:800 15px "Sora"}
+.tag{font-size:13px;color:var(--muted)}
+nav{margin-left:auto;display:flex;gap:18px;font-size:14px}
+nav a{color:var(--muted);text-decoration:none}
+nav a:hover{color:var(--text)}
+h1{font:800 clamp(26px,5vw,38px) "Sora";line-height:1.2;margin:36px 0 10px}
+.sub{color:var(--muted);max-width:640px;font-size:16.5px}
+.card{background:var(--card);border:1px solid var(--edge);
+  border-radius:var(--r);padding:20px;margin:22px 0}
+label{display:block;font:600 13.5px "Inter";color:var(--muted);
+  margin:14px 0 6px;text-transform:uppercase;letter-spacing:.06em}
+select,input[type=text]{width:100%;padding:13px 14px;font:15px "JetBrains Mono",monospace;
+  color:var(--text);background:var(--navy2);border:1px solid var(--edge);
+  border-radius:10px;outline:none}
+select:focus,input[type=text]:focus{border-color:var(--edge2)}
+button.primary{width:100%;margin-top:18px;padding:15px;font:700 16px "Sora";
+  color:#04252B;background:var(--cyan);border:none;border-radius:11px;cursor:pointer}
+button.primary:hover{filter:brightness(1.08)}
+button.primary:disabled{opacity:.55;cursor:not-allowed}
+.row{display:flex;gap:14px;flex-wrap:wrap}
+.row>div{flex:1;min-width:220px}
+.status{padding:14px 16px;border-radius:10px;margin:14px 0;
+  font-size:14.5px;display:none}
+.status.show{display:block}
+.status.info{background:rgba(62,214,208,.08);border:1px solid rgba(62,214,208,.3)}
+.status.err{background:rgba(248,122,122,.08);border:1px solid rgba(248,122,122,.35);color:#FFB4B4}
+.status.warn{background:rgba(245,181,74,.08);border:1px solid rgba(245,181,74,.35);color:#FFD89A}
+.verdict{display:inline-block;padding:5px 14px;border-radius:999px;
+  font:700 13px "Sora";letter-spacing:.04em}
+.v-SUPPORTED{background:rgba(74,222,128,.15);color:var(--ok);border:1px solid rgba(74,222,128,.4)}
+.v-CONTRADICTED{background:rgba(248,122,122,.15);color:var(--bad);border:1px solid rgba(248,122,122,.4)}
+.v-INSUFFICIENT_EVIDENCE{background:rgba(245,181,74,.15);color:var(--warn);border:1px solid rgba(245,181,74,.4)}
+.pill{display:inline-block;padding:3px 10px;border-radius:999px;font:600 12px "Inter";
+  background:var(--card2);border:1px solid var(--edge);color:var(--muted);margin-right:6px}
+.pill.s-success{color:var(--ok);border-color:rgba(74,222,128,.4)}
+.pill.s-failed{color:var(--bad);border-color:rgba(248,122,122,.4)}
+.pill.s-pending,.pill.s-unknown{color:var(--warn);border-color:rgba(245,181,74,.4)}
+table{width:100%;border-collapse:collapse;font-size:14px;margin-top:8px}
+td{padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.06);
+  vertical-align:top;word-break:break-all}
+td:first-child{color:var(--muted);white-space:nowrap;width:34%}
+.mono{font-family:"JetBrains Mono",monospace;font-size:13px}
+.expl{background:var(--navy2);border-left:3px solid var(--cyan);
+  padding:14px 16px;border-radius:0 10px 10px 0;margin:12px 0;font-size:15.5px}
+section h2{font:700 20px "Sora";margin:34px 0 8px}
+.note{color:var(--faint);font-size:13.5px}
+.hidden{display:none}
+footer{margin:48px 0 32px;padding-top:18px;border-top:1px solid var(--edge);
+  color:var(--faint);font-size:13px}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);
+  background:var(--card2);border:1px solid var(--edge2);color:var(--text);
+  padding:11px 20px;border-radius:11px;font-size:14px;z-index:99;display:none;
+  max-width:92vw}
+.demo-badge{display:inline-block;background:rgba(245,181,74,.15);color:var(--warn);
+  border:1px solid rgba(245,181,74,.4);border-radius:6px;padding:2px 8px;
+  font:700 11px "Inter";letter-spacing:.05em}
+@media(max-width:640px){nav{display:none}.wrap{padding:0 14px}}
+</style>
+</head>
+<body>
+<header><div class="wrap bar">
+  <div class="logo"><div class="mark">CC</div>ChainClarity</div>
+  <div class="tag">transactions, in plain English</div>
+  <nav><a href="#analyze">Analyze</a><a href="#about">About</a><a href="#limits">Limitations</a><a href="#privacy">Privacy</a></nav>
+</div></header>
+
+<main class="wrap">
+  <h1>Understand any transaction — without reading raw blockchain data.</h1>
+  <p class="sub">Paste a transaction hash, choose a network, and get a plain-English
+  explanation backed by public explorer evidence. Your claims about the transaction
+  are adjudicated on-chain by a GenLayer Intelligent Contract.</p>
+
+  <div class="card" id="analyze">
+    <div class="row">
+      <div>
+        <label for="network">Network</label>
+        <select id="network">
+          <option value="ethereum">Ethereum Mainnet (Etherscan)</option>
+          <option value="solana">Solana Mainnet (Solscan)</option>
+        </select>
+      </div>
+      <div>
+        <label for="target">Transaction hash or signature</label>
+        <input type="text" id="target" spellcheck="false"
+          placeholder="0x… (64 hex) or Solana signature">
+      </div>
+    </div>
+    <label for="question">Optional — what do you want to know? <span style="text-transform:none;letter-spacing:0">(e.g. “Did this send 1 ETH to my exchange?”)</span></label>
+    <input type="text" id="question" spellcheck="false" placeholder="Leave empty for a factual summary only">
+    <button class="primary" id="go">Analyze Transaction</button>
+    <div class="status" id="status"></div>
+    <p class="note">Wallet-address analysis is not supported yet — paste a transaction hash. Supported: Ethereum &amp; Solana mainnet.</p>
+  </div>
+
+  <div class="card hidden" id="result">
+    <div id="resHead"></div>
+    <div id="resExplain"></div>
+    <h2 style="margin:18px 0 4px;font-size:16px">Evidence <span class="note">(provider-reported fields)</span></h2>
+    <table id="resFields"></table>
+    <div id="resLimits"></div>
+    <div id="resAdjudication"></div>
+    <div class="note" id="resMeta" style="margin-top:10px"></div>
+  </div>
+
+  <section id="about">
+    <h2>About</h2>
+    <p class="sub">ChainClarity fetches transaction data from public explorers
+    (Etherscan for Ethereum, Solscan Pro for Solana), turns the raw response into
+    bounded structured evidence, and — when you ask a question about the transaction —
+    sends the claim + evidence to a GenLayer Intelligent Contract. Validator consensus
+    independently re-evaluates whether the evidence actually supports your claim, and
+    the verdict (SUPPORTED / CONTRADICTED / INSUFFICIENT_EVIDENCE) is stored on-chain
+    and retrievable by anyone.</p>
+    <p class="sub" style="margin-top:8px">The contract never treats the explorer API
+    as verified truth and never accepts a single node's conclusion without its own
+    evaluation — that independent adjudication is the role of GenLayer consensus here.</p>
+  </section>
+
+  <section id="limits">
+    <h2>Limitations</h2>
+    <ul class="sub" style="padding-left:20px">
+      <li>Explorer APIs can be delayed, rate-limited, or wrong. A <b>success</b> status means the transaction executed — it does <b>not</b> mean it was safe, honest, or what you intended.</li>
+      <li>Evidence is provider-reported (Etherscan / Solscan), not independently re-verified on-chain by this application.</li>
+      <li>Token transfers beyond native ETH/SOL are shown only when the provider's response reliably contains them; otherwise they are listed as missing.</li>
+      <li>Wallet-address analysis is not supported yet.</li>
+      <li>GenLayer consensus evaluates the evidence <i>as submitted</i>; it cannot fetch explorers itself in this version.</li>
+    </ul>
+  </section>
+
+  <section id="privacy">
+    <h2>Privacy &amp; API disclosure</h2>
+    <ul class="sub" style="padding-left:20px">
+      <li>No wallet connection, no signatures, no private keys — analysis is read-only.</li>
+      <li>The hash you submit and your optional question are sent to the ChainClarity API and, if you asked a question, stored on the public GenLayer testnet as part of the adjudication record. Do not paste a question containing personal data.</li>
+      <li>Provider API keys are server-side only and are never sent to your browser.</li>
+      <li>No accounts, cookies, or third-party analytics.</li>
+    </ul>
+  </section>
+
+  <footer>
+    ChainClarity — GenLayer Portal contribution (Project category).
+    Evidence providers: Etherscan v2, Solscan Pro v2. Adjudication: GenLayer Intelligent Contract.
+    <span id="cfg" class="mono"></span>
+  </footer>
+</main>
+<div class="toast" id="toast"></div>
+<script>
+'use strict';
+const LS_API = 'cc_api_base', LS_CONTRACT = 'cc_contract', LS_PK = 'cc_burner_pk';
+const $ = id => document.getElementById(id);
+let CONTRACT = localStorage.getItem(LS_CONTRACT) ||
+  '0x3996E1832B2d7a8Ec10310DE596B93cB93CD7e21'; // default: live Studionet deployment
+let client = null, account = null;
+
+function toast(msg){
+  const t = $('toast'); t.textContent = msg; t.style.display = 'block';
+  clearTimeout(t._h); t._h = setTimeout(()=>t.style.display='none', 4000);
+}
+function status(kind, msg){
+  const s = $('status'); s.className = 'status show ' + kind; s.textContent = msg;
+}
+function apiBase(){ return (localStorage.getItem(LS_API) || '').replace(/\/+$/,''); }
+
+// ---------- init config ----------
+async function boot(){
+  try{
+    const cfg = await (await fetch(apiBase() + '/api/config')).json();
+    if (cfg.contract_address){ CONTRACT = cfg.contract_address; localStorage.setItem(LS_CONTRACT, CONTRACT); }
+    $('cfg').textContent = CONTRACT ? (' contract ' + CONTRACT.slice(0,10) + '…') : '';
+  }catch(e){
+    status('warn','API not reachable at ' + (apiBase()||'same origin') +
+      '. If you are self-hosting, set the API base URL (console: localStorage.cc_api_base). Static demo below uses sample data.');
+  }
+}
+boot();
+
+// ---------- SDK client ----------
+function ensureClient(){
+  if (!window.GenLayerSDK) throw new Error('GenLayer SDK bundle not loaded');
+  if (!CONTRACT) throw new Error('contract address not configured');
+  if (!client){
+    client = window.GenLayerSDK.createClient({ chain: window.GenLayerSDK.studionet });
+    let pk = localStorage.getItem(LS_PK);
+    if (!pk){ pk = window.GenLayerSDK.generatePrivateKey(); localStorage.setItem(LS_PK, pk); }
+    account = window.GenLayerSDK.createAccount(pk);
+  }
+  return client;
+}
+
+async function fundIfPossible(){
+  try{
+    await ensureClient().request({ method:'sim_fundAccount', params:[account.address, 5e18] });
+  }catch(e){ /* already funded or faucet unavailable */ }
+}
+
+async function adjudicateOnChain(network, txHash, claim, evidence){
+  const c = ensureClient();
+  await fundIfPossible();
+  const evJson = JSON.stringify({
+    provider: evidence.provider,
+    tx_status: evidence.tx_status,
+    fields: evidence.fields,
+    retrieved_at: evidence.retrieved_at,
+    source_url: evidence.source_url,
+    limitations: evidence.limitations || [],
+  });
+  const txHash1 = await c.writeContract({ address: CONTRACT,
+    functionName: 'submit_claim', args: [network, txHash, claim, evJson], account });
+  const rec1 = await Promise.race([
+    c.waitForTransactionReceipt({ hash: txHash1, status: window.GenLayerSDK.TransactionStatus.ACCEPTED, interval: 5000, retries: 40 }),
+    new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout waiting for submit_claim')), 200000))]);
+  failIfReverted(rec1, 'submit_claim');
+  // extract claim id from return payload
+  let claimId = null;
+  try{
+    const leader = rec1.consensus_data?.leader_receipt;
+    const payload = leader?.[0]?.result?.payload;
+    if (payload !== undefined) claimId = JSON.parse(JSON.stringify(payload));
+  }catch(e){}
+  if (claimId === null || claimId === undefined) throw new Error('could not read claim id from receipt');
+  claimId = typeof claimId === 'string' ? claimId.replace(/"/g,'') : String(claimId);
+  const txHash2 = await c.writeContract({ address: CONTRACT,
+    functionName: 'adjudicate', args: [String(Number(claimId))], account });
+  const rec2 = await Promise.race([
+    c.waitForTransactionReceipt({ hash: txHash2, status: window.GenLayerSDK.TransactionStatus.ACCEPTED, interval: 5000, retries: 60 }),
+    new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout waiting for adjudicate')), 240000))]);
+  failIfReverted(rec2, 'adjudicate');
+  // read back authoritative record
+  const rec = await c.readContract({ address: CONTRACT, functionName: 'get_claim',
+    args: [String(Number(claimId))], account });
+  return { claim_id: claimId, record: typeof rec === 'string' ? JSON.parse(rec) : rec,
+           submit_tx: txHash1, adjudicate_tx: txHash2 };
+}
+function failIfReverted(receipt, fn){
+  const leader = receipt?.consensus_data?.leader_receipt;
+  const exec = Array.isArray(leader) && leader.length ? leader[0].execution_result : undefined;
+  if (exec === 'FAILURE' || exec === 'ERROR'){
+    const stderr = String(leader[0]?.genvm_result?.stderr || '');
+    throw new Error(fn + ' reverted on chain: ' + (stderr.match(/(?:AssertionError|UserError): (.+)/)?.[1] || 'unknown'));
+  }
+}
+
+// ---------- plain-English explanation (client-side, factual only) ----------
+function explain(evidence){
+  const f = evidence.fields || {};
+  const s = evidence.tx_status;
+  let out = '';
+  if (s === 'success'){
+    out = 'This transaction executed successfully on the network. That means the network accepted and processed it — it does not tell you whether it did what you expected, whether a counterpart honored their side, or whether it was safe.';
+  } else if (s === 'failed'){
+    out = 'This transaction did NOT execute successfully — the network processed it but the operation itself reverted or failed. Any value transfer it attempted (except the fee) did not take effect.';
+  } else if (s === 'pending'){
+    out = 'This transaction has not been included in a block yet. Its final effect may still change.';
+  } else {
+    out = 'The provider did not report a definitive execution status for this transaction.';
+  }
+  const val = f.value_eth || f.sol_change_ + '' ;
+  if (f.value_eth && f.value_eth !== '0' && f.from && f.to){
+    out += ' The provider reports a transfer of ' + f.value_eth + ' ETH from ' + short(f.from) + ' to ' + short(f.to) + '.';
+  }
+  const changes = Object.keys(f).filter(k=>k.startsWith('sol_change_'));
+  if (changes.length){
+    out += ' The largest native SOL balance changes reported: ' +
+      changes.map(k => short(k.slice(11)) + ' ' + (f[k].startsWith('-')?'':'+' ) + f[k] + ' SOL').join(', ') + '.';
+  }
+  if (f.fee_eth && f.fee_eth !== '0') out += ' Reported fee: ' + f.fee_eth + ' ETH.';
+  if (f.fee_sol && f.fee_sol !== '0' && f.fee_sol !== 'unknown') out += ' Reported fee: ' + f.fee_sol + ' SOL.';
+  return out;
+}
+function short(a){ a = String(a||''); return a.length > 14 ? a.slice(0,8) + '…' + a.slice(-6) : a; }
+
+// ---------- main flow ----------
+$('go').addEventListener('click', run);
+async function run(){
+  const network = $('network').value;
+  const target = $('target').value.trim();
+  const question = $('question').value.trim();
+  $('result').classList.add('hidden');
+  if (!target){ status('err','Paste a transaction hash first.'); return; }
+  $('go').disabled = true;
+  status('info','Fetching evidence from the provider…');
+  let data;
+  try{
+    const resp = await fetch(apiBase() + '/api/analyze', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ network, target }) });
+    data = await resp.json();
+    if (!resp.ok || !data.ok){
+      status('err', (data.message || 'Analysis failed.') + (data.error ? ' ['+data.error+']' : ''));
+      $('go').disabled = false; return;
+    }
+  }catch(e){
+    status('err','Could not reach the analysis API ('+e.message+').');
+    $('go').disabled = false; return;
+  }
+  status('info','Evidence retrieved. Rendering…');
+  renderEvidence(data.evidence, network, target);
+
+  if (question && CONTRACT){
+    status('info','Adjudicating your question on GenLayer (this takes 1–3 minutes; validators re-evaluate independently)…');
+    try{
+      const r = await adjudicateOnChain(network, target, question, data.evidence);
+      renderAdjudication(r, question);
+      status('info','Done — verdict recorded on-chain.');
+    }catch(e){
+      status('warn','On-chain adjudication unavailable: ' + e.message + ' — showing evidence-based explanation only.');
+    }
+  } else if (question && !CONTRACT){
+    status('warn','Question noted, but no contract address is configured — showing evidence-based explanation only.');
+  } else {
+    status('info','Done.');
+  }
+  $('go').disabled = false;
+}
+
+function renderEvidence(ev, network, target){
+  const head = $('resHead');
+  head.innerHTML = '<span class="pill s-' + ev.tx_status + '">status: ' + ev.tx_status + '</span>' +
+    '<span class="pill">' + (network === 'ethereum' ? 'Ethereum' : 'Solana') + '</span>' +
+    '<span class="pill mono">' + short(target) + '</span>';
+  $('resExplain').innerHTML = '<div class="expl" id="plainExpl"></div>';
+  const ex = explain(ev);
+  $('plainExpl').textContent = ex;
+  const rows = Object.entries(ev.fields || {}).map(([k,v]) =>
+    '<tr><td>' + k.replace(/_/g,' ') + '</td><td class="mono">' + String(v) + '</td></tr>').join('');
+  $('resFields').innerHTML = rows || '<tr><td colspan=2>No fields available</td></tr>';
+  $('resLimits').innerHTML = (ev.limitations || []).length ?
+    '<p class="note" style="margin-top:10px"><b>Limitations:</b> ' + ev.limitations.join(' ') + '</p>' : '';
+  $('resAdjudication').innerHTML = '';
+  $('resMeta').innerHTML = 'Evidence source: ' + ev.provider + ' · retrieved ' + ev.retrieved_at +
+    ' · <a style="color:var(--cyan)" href="' + ev.source_url + '" target="_blank" rel="noopener">view on explorer</a>' +
+    ' · explanation is factual reporting only, not financial advice.';
+  $('result').classList.remove('hidden');
+}
+
+function renderAdjudication(r, question){
+  const rec = r.record || {};
+  const v = rec.verdict || 'UNKNOWN';
+  $('resAdjudication').innerHTML =
+    '<h2 style="margin:18px 0 4px;font-size:16px">GenLayer adjudication of your question</h2>' +
+    '<p class="note">“' + question.replace(/</g,'&lt;') + '”</p>' +
+    '<div style="margin:8px 0"><span class="verdict v-' + v + '">' + v + '</span></div>' +
+    (rec.reasoning ? '<p class="sub">' + String(rec.reasoning).replace(/</g,'&lt;') + '</p>' : '') +
+    ((rec.missing && rec.missing.length) ? '<p class="note">Missing / uncertain: ' + rec.missing.map(String).join('; ') + '</p>' : '') +
+    '<p class="note mono">claim id ' + r.claim_id + ' · submit tx ' + short(r.submit_tx) +
+    ' · adjudicate tx ' + short(r.adjudicate_tx) + ' — all validators re-evaluated the evidence independently; the verdict is the consensus outcome.</p>';
+}
+
+// ---------- demo data (clearly labeled) ----------
+window.__loadDemo = function(){
+  const demo = { provider:'etherscan', tx_status:'success',
+    fields:{ from:'0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045', to:'0x28C6c06298d514Db089934071355E5743bf21d60',
+      value_eth:'2.5', block:'21045339', gas_used:'21000', fee_eth:'0.000472', transaction_index:'88' },
+    retrieved_at:'2026-10-20T05:00:00Z', source_url:'#demo',
+    limitations:['THIS IS DEMO DATA — not a live provider response.'] };
+  renderEvidence(demo, 'ethereum', '0x' + '12'.repeat(32) + ' (demo)');
+  $('resMeta').innerHTML = '<span class="demo-badge">DEMO DATA</span> ' + $('resMeta').innerHTML;
+  toast('Demo data loaded — clearly labeled, not a live analysis.');
+};
+</script>
+</body>
+</html>

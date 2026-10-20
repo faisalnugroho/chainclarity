@@ -1,0 +1,85 @@
+{
+  "entries": [
+    {
+      "step": "deploy",
+      "ok": true,
+      "tx": "0x1600e4f3fd5a0809068b9a21e04d5b3a36f8ac804ca0e0bd5666fcc7646af37c",
+      "contract_address": "0x3996E1832B2d7a8Ec10310DE596B93cB93CD7e21",
+      "contract_sha256": "9f2c6ea69515ce83a8d5ee3a18f26ca1ed8319ea72d39e814d7d14ac59c10f5b",
+      "deployer": "0x25EDf5b1121b4aa80a9A2aF317F9dE9e440Ef9Fb",
+      "ts": 1792476560.3533983
+    },
+    {
+      "step": "scenario",
+      "idx": 0,
+      "note": "The transaction transferred 1.5 ETH from one address to anot",
+      "submit_tx": "0xd53071c133bac79160120701a899ed15e0def8983a09beb1bed9aa26655b5613",
+      "ok": false,
+      "error": "invalid literal for int() with base 10: \"{'raw': [9], 'readable': '1'}\""
+    },
+    {
+      "step": "scenario",
+      "idx": 1,
+      "note": "The transaction sent 100 ETH to the burn address.",
+      "submit_tx": "0x376e2d6ff73a77ebcaba007350f033d3c3085a0da0f6e6bb34372c4a3ddaff7c",
+      "ok": false,
+      "error": "invalid literal for int() with base 10: \"{'raw': [17], 'readable': '2'}\""
+    },
+    {
+      "step": "scenario",
+      "idx": 2,
+      "note": "The transaction was legitimate and verified by auditors.",
+      "ok": false,
+      "error": "submit_claim reverted: {'raw': 'AWV2aWRlbmNlX21hbGZvcm1lZA==', 'status': 'rollback', 'payload': 'evidence_malformed'}"
+    },
+    {
+      "step": "smoke_summary",
+      "ok_count": 0,
+      "total": 3,
+      "contract": "0x3996E1832B2d7a8Ec10310DE596B93cB93CD7e21"
+    },
+    {
+      "step": "scenario",
+      "idx": 0,
+      "note": "The transaction transferred 1.5 ETH from one address to anot",
+      "submit_tx": "0x5c189fe6f9938d4b16809199a7dead271c5a040913d2f6896964ce1d2e1aa089",
+      "claim_id": 3,
+      "adjudicate_tx": "0x52cba969af036e13e599b71b0b0450d8eaf56ad5924ee871ab7f453bf295470c",
+      "verdict": "SUPPORTED",
+      "reasoning": "Evidence fields directly state from/to addresses and value_eth=1.5, entailing the transfer claim.",
+      "vote1": "MAJORITY_AGREE",
+      "vote2": "MAJORITY_AGREE",
+      "ok": true,
+      "duration_s": 93.6
+    },
+    {
+      "step": "scenario",
+      "idx": 1,
+      "note": "The transaction sent 100 ETH to the burn address.",
+      "submit_tx": "0x0c0533fbcc0e6f1fffb016f74b3aba710b0a660651e6edbcf8b9fc97e66235d1",
+      "claim_id": 4,
+      "adjudicate_tx": "0x7f1ac87ecd746b2938e67c2eaf7766d20e80f91e66a27484c297a66039ff5872",
+      "verdict": "CONTRADICTED",
+      "reasoning": "value_eth is 1.5, not 100 ETH, and to is 0xbbbb... not the burn address; these stated fields directly contradict the claim.",
+      "vote1": "MAJORITY_AGREE",
+      "vote2": "MAJORITY_AGREE",
+      "ok": true,
+      "duration_s": 95.5
+    },
+    {
+      "step": "scenario",
+      "idx": 2,
+      "note": "The transaction was legitimate and verified by auditors.",
+      "submit_tx": "0x270511c5863c2f59903aed65449644b11ad3aa2e783858788a15ed91b023bc00",
+      "verdict": "GUARD_REJECTED (evidence_malformed)",
+      "ok": true,
+      "duration_s": 40.1
+    },
+    {
+      "step": "smoke_summary",
+      "ok_count": 3,
+      "total": 3,
+      "contract": "0x3996E1832B2d7a8Ec10310DE596B93cB93CD7e21"
+    }
+  ]
+}
